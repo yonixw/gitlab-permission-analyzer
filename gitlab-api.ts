@@ -1,6 +1,7 @@
 import fetch from "node-fetch";
 import process from "process"
-import { Pair } from "./Pair";
+import { Pair } from "./Utils/Pair";
+import { Factory } from "./Utils/Factory";
 
 const gitlabAPIBase: string = "https://gitlab.com/api/v4";
 
@@ -38,7 +39,8 @@ const apiUrl = (gitlabApi: string ): string => {
     return gitlabAPIBase + gitlabApi;
 };
 
-export const apiFetch = async <T>(gitlabApi: gitlabAPIEnum, paramArray: Array<Pair<string,string>>): Promise<T> => {
+
+export const apiFetch = async <T>(C: new() => T, gitlabApi: gitlabAPIEnum, paramArray: Array<Pair<string,string>>): Promise<T> => {
     const apiRelative = allGitlabAPI[gitlabApi];
     let fullURL: string = apiUrl(apiRelative);
     
@@ -53,7 +55,7 @@ export const apiFetch = async <T>(gitlabApi: gitlabAPIEnum, paramArray: Array<Pa
 
     const res =  await fetch(fullURL, { method: "GET", headers: {"PRIVATE-TOKEN" : GIT_TOKEN} });
     const json = await res.json();
-    return json as T;
+    return Object.assign(Factory.create(C), json);
 }
 
 
