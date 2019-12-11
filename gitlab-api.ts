@@ -58,5 +58,14 @@ export const apiFetch = async <T>(C: new() => T, gitlabApi: gitlabAPIEnum, param
     return Object.assign(Factory.create(C), json);
 }
 
+export const apiFetchArray = async <T>(C: new() => T, gitlabApi: gitlabAPIEnum, paramArray: Array<Pair<string,string>>): Promise<Array<T>> => {
+    const tempArray = await apiFetch(Array,gitlabApi, paramArray);
+    const resultArray: Array<T> = [];
+    tempArray.forEach(elemJSON => {
+        resultArray.push(Object.assign(new C(), elemJSON));
+    });
+    return resultArray;
+}
+
 
 

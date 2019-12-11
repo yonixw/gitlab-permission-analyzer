@@ -7,6 +7,10 @@ export class Pair<T1, T2> {
         this.value = value;
     }
 
+    static kv<K,V>(k:K,v:V) {
+        return new Pair(k,v);
+    }
+
     getKey() {
         return this.key;
     }
