@@ -22,18 +22,20 @@ const allGitlabAPI: { [key in gitlabAPIEnum]: string; } = {
     [gitlabAPIEnum.PROJECT_ALL_MEMBERS] : "/projects/:id/members/all",
 };
 
-enum GitlabAccessEnum {
+export enum GitlabAccessEnum {
     GUEST=10,REPORTER=20,DEVELOPER=30,MAINTAINER=40,
     OWNER=50, 
 }
 
-const GitlabAccessEnumDesc: { [key in GitlabAccessEnum]: string; } = {
+export const GitlabAccessEnumDesc: { [key in GitlabAccessEnum]: string; } = {
     [GitlabAccessEnum.GUEST] : "GUEST",
     [GitlabAccessEnum.REPORTER] : "REPORTER",
     [GitlabAccessEnum.DEVELOPER] : "DEVELOPER",
     [GitlabAccessEnum.MAINTAINER] : "MAINTAINER",
     [GitlabAccessEnum.OWNER] : "OWNER",
 }
+
+export type GitlabProjectVisibility = "private" | "public";
 
 const apiUrl = (gitlabApi: string ): string => {
     return gitlabAPIBase + gitlabApi;

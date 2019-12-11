@@ -1,4 +1,5 @@
 import { pathToFileURL } from "url";
+import { Project } from "./Project";
 
 export class Group {
     /*
@@ -22,7 +23,9 @@ export class Group {
     path: string;
     web_url: string;
 
+    myProjects: Array<Project> = [];
+
     toID() : string{
-        return this.path;
+        return this.id.toString();
     }
 }

@@ -1,22 +1,75 @@
 import {config as dotenvConfig} from "dotenv";
 
-import {apiFetch, gitlabAPIEnum, apiFetchArray} from "./gitlab-api";
-import { User } from "./gitlab-classes/User"
+import {apiFetch, gitlabAPIEnum, apiFetchArray, GitlabAccessEnumDesc} from "./gitlab-api";
+import { User, UserWithAccess } from "./gitlab-classes/User"
 import { Pair } from "./Utils/Pair";
 import { Group } from "./gitlab-classes/Group";
+import { Project } from "./gitlab-classes/Project";
+import { UserAccess } from "./gitlab-classes/UserAccess";
+
+let allUsers : {[key:string]: User} = {};
+let allProjects : {[key:string]: Project} = {};
+
+async function handleProjects(projects: Array<Project>, parent:Group) {
+    projects.forEach(async proj => {
+        proj.myGroup = parent;
+        allProjects[proj.toID()] = proj;
+
+        let projMembers : Array<UserWithAccess> = await apiFetchArray(
+            UserWithAccess,
+            gitlabAPIEnum.PROJECT_MEMBERS,
+            [ Pair.kv("id",proj.toID()) ]
+        );
+
+        let allMembers : Array<UserWithAccess> = await apiFetchArray(
+            UserWithAccess,
+            gitlabAPIEnum.PROJECT_ALL_MEMBERS,
+            [ Pair.kv("id",proj.toID()) ]
+        );
+
+        allMembers.forEach(user => {
+            let access = new UserAccess();
+            access.myProject = proj;
+            access.myUser = user;
+            access.myAccessMode = user.access_level;
+            access.myExpireDate = user.expires_at;
+
+            // Start assuming they were inherited
+            access.isInheritedGroup = true;
+            access.myInheritGroup = parent;
+
+            if (!allUsers[user.toID()])
+                allUsers[user.toID()] = user as User;
+            allUsers[user.toID()].myProjectAccess.push(access);
+        });
+
+        projMembers.forEach(user => {
+            let userAccessArray = allUsers[user.toID()].myProjectAccess;
+            let lastIndex = userAccessArray.length -1;
+            userAccessArray[lastIndex].isInheritedGroup = false;
+            userAccessArray[lastIndex].myInheritGroup = null;
+        })
+    });
+}
+
+function printUserToProject() {
+    Object.values(allUsers).forEach(user => {
+        console.log("[USER] " + user.name);
+        user.myProjectAccess.forEach(access => {
+            let result = "\t[PROJ] " + access.myProject.name_with_namespace;
+            result += " | " + GitlabAccessEnumDesc[access.myAccessMode];
+            result += " | " + ((access.isInheritedGroup) ? "GROUP" : "PROJ");
+            result += " | " + access.myExpireDate ;
+            console.log(result);
+        })
+    })
+}
 
 async function main() {
     console.log("⚠ Currently not supporting group inheritance ⚠");
 
     const myUser = await apiFetch(User, gitlabAPIEnum.MY_USER, []);
-    const myGroup: Array<Group> 
-        = await apiFetchArray(
-            Group,
-            gitlabAPIEnum.MY_NAMESPACES,
-            [
-                Pair.kv("id", myUser.toID())
-            ] 
-        )
+    allUsers[myUser.toID()] = myUser;
 
     console.log(
         "Found myself: " + myUser.name + ", " +
@@ -24,9 +77,38 @@ async function main() {
         "Id: " + myUser.toID() 
     );
 
-    myGroup.forEach(g => {
+    const myGroups: Array<Group> 
+        = await apiFetchArray(
+            Group,  
+            gitlabAPIEnum.MY_NAMESPACES,
+            [
+                Pair.kv("id", myUser.toID())
+            ] 
+        )
+
+    myGroups.forEach(g => {
         console.log(`Found group: ${g.name} [${g.toID()}]`);
     });
+
+    // My project need user api and not group api
+    const UserProjects = await apiFetchArray(
+        Project,
+        gitlabAPIEnum.USER_PROJECTS,
+        [ Pair.kv("id",myUser.toID()) ]
+    );
+    handleProjects(UserProjects,myGroups[0]);
+
+    for (let i = 1; i < myGroups.length; i++) {
+        const group = myGroups[i];
+        let groupProjects  = await apiFetchArray(
+            Project,
+            gitlabAPIEnum.GROUP_PROJECTS,
+            [ Pair.kv("id",group.toID()) ]
+        );
+        handleProjects(groupProjects, group);
+    }
+
+    printUserToProject();
 }
 
 dotenvConfig(); // load .env file
