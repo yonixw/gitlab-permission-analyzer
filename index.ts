@@ -6,13 +6,23 @@ import { Pair } from "./Utils/Pair";
 import { Group } from "./gitlab-classes/Group";
 
 async function main() {
-    console.log("(*) Currently not supporting group inheritance");
+    console.log("⚠ Currently not supporting group inheritance ⚠");
 
     const myUser = await apiFetch(User, gitlabAPIEnum.MY_USER, []);
     const myGroup: Array<Group> 
-        = await apiFetchArray(Group, gitlabAPIEnum.MY_NAMESPACES, [Pair.kv("id", myUser.toID())] )
+        = await apiFetchArray(
+            Group,
+            gitlabAPIEnum.MY_NAMESPACES,
+            [
+                Pair.kv("id", myUser.toID())
+            ] 
+        )
 
-    console.log(`Found myself: ${myUser.name}, username: ${myUser.username}, id:${myUser.toID()}`);
+    console.log(
+        "Found myself: " + myUser.name + ", " +
+        "Username: " + myUser.username + "," + 
+        "Id: " + myUser.toID() 
+    );
 
     myGroup.forEach(g => {
         console.log(`Found group: ${g.name} [${g.toID()}]`);
