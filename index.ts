@@ -1,6 +1,6 @@
 import {config as dotenvConfig} from "dotenv";
 
-import {apiFetch, gitlabAPIEnum, apiFetchArray, GitlabAccessEnumDesc} from "./gitlab-api";
+import {apiFetch, gitlabAPIEnum, apiFetchArray, GitlabAccessEnumDesc, apiFetchArrayAll} from "./gitlab-api";
 import { User, UserWithAccess } from "./gitlab-classes/User"
 import { Pair } from "./Utils/Pair";
 import { Group } from "./gitlab-classes/Group";
@@ -10,18 +10,22 @@ import { UserAccess } from "./gitlab-classes/UserAccess";
 let allUsers : {[key:string]: User} = {};
 let allProjects : {[key:string]: Project} = {};
 
+async function getAllO() {
+
+}
+
 async function handleProjects(projects: Array<Project>, parent:Group) {
     projects.forEach(async proj => {
         proj.myGroup = parent;
         allProjects[proj.toID()] = proj;
 
-        let projMembers : Array<UserWithAccess> = await apiFetchArray(
+        let projMembers : Array<UserWithAccess> = await apiFetchArrayAll(
             UserWithAccess,
             gitlabAPIEnum.PROJECT_MEMBERS,
             [ Pair.kv("id",proj.toID()) ]
         );
 
-        let allMembers : Array<UserWithAccess> = await apiFetchArray(
+        let allMembers : Array<UserWithAccess> = await apiFetchArrayAll(
             UserWithAccess,
             gitlabAPIEnum.PROJECT_ALL_MEMBERS,
             [ Pair.kv("id",proj.toID()) ]
@@ -66,50 +70,51 @@ function printUserToProject() {
 }
 
 async function main() {
-    console.log("⚠ Currently not supporting group inheritance ⚠");
+    try {
+        console.log("⚠ Currently not supporting group2group inheritance ⚠");
 
-    const myUser = await apiFetch(User, gitlabAPIEnum.MY_USER, []);
-    allUsers[myUser.toID()] = myUser;
+        const myUser = await apiFetch(User, gitlabAPIEnum.MY_USER, []);
+        allUsers[myUser.toID()] = myUser;
 
-    console.log(
-        "Found myself: " + myUser.name + ", " +
-        "Username: " + myUser.username + "," + 
-        "Id: " + myUser.toID() 
-    );
+        console.log(
+            "Found myself: " + myUser.name + ", " +
+            "Username: " + myUser.username + "," + 
+            "Id: " + myUser.toID() 
+        );
 
-    const myGroups: Array<Group> 
-        = await apiFetchArray(
+        const myGroups: Array<Group> = await apiFetchArrayAll(
             Group,  
             gitlabAPIEnum.MY_NAMESPACES,
-            [
-                Pair.kv("id", myUser.toID())
-            ] 
+            [ Pair.kv("id", myUser.toID()) ] 
         )
 
-    myGroups.forEach(g => {
-        console.log(`Found group: ${g.name} [${g.toID()}]`);
-    });
+        myGroups.forEach(g => {
+            console.log(`Found group: ${g.name} [${g.toID()}]`);
+        });
 
-    // My project need user api and not group api
-    const UserProjects = await apiFetchArray(
-        Project,
-        gitlabAPIEnum.USER_PROJECTS,
-        [ Pair.kv("id",myUser.toID()) ]
-    );
-    handleProjects(UserProjects,myGroups[0]);
-
-    for (let i = 1; i < myGroups.length; i++) {
-        const group = myGroups[i];
-        let groupProjects  = await apiFetchArray(
+        // My project need user api and not group api
+        const UserProjects = await apiFetchArrayAll(
             Project,
-            gitlabAPIEnum.GROUP_PROJECTS,
-            [ Pair.kv("id",group.toID()) ]
+            gitlabAPIEnum.USER_PROJECTS,
+            [ Pair.kv("id",myUser.toID()) ]
         );
-        handleProjects(groupProjects, group);
-    }
+        handleProjects(UserProjects,myGroups[0]);
 
-    printUserToProject();
+        for (let i = 1; i < myGroups.length; i++) {
+            const group = myGroups[i];
+            let groupProjects  = await apiFetchArrayAll(
+                Project,
+                gitlabAPIEnum.GROUP_PROJECTS,
+                [ Pair.kv("id",group.toID()) ]
+            );
+            handleProjects(groupProjects, group);
+        }
+
+        printUserToProject();
+    } catch (error) {
+        console.error(error);
+    }
 }
 
 dotenvConfig(); // load .env file
-main().then(()=>console.log("done")).catch((e)=>console.error(e));
+main().then(()=>console.log("[DONE]")).catch(e=>console.error(e));

@@ -1,4 +1,4 @@
-import fetch from "node-fetch";
+import fetch , { Response } from "node-fetch";
 import process from "process"
 import { Pair } from "./Utils/Pair";
 import { Factory } from "./Utils/Factory";
@@ -41,8 +41,23 @@ const apiUrl = (gitlabApi: string ): string => {
     return gitlabAPIBase + gitlabApi;
 };
 
+const fetchURLResponseWithToken = async (fullURL: string) => {
+    const GIT_TOKEN = process.env.GIT_TOKEN;
+    if (!GIT_TOKEN)
+        throw "GIT_TOKEN env is empty, needed for API. (put in .env file?)";
 
-export const apiFetch = async <T>(C: new() => T, gitlabApi: gitlabAPIEnum, paramArray: Array<Pair<string,string>>): Promise<T> => {
+    console.log("[URL] " + fullURL);
+    const res =  await fetch(
+        fullURL,
+        { method: "GET", headers: {"PRIVATE-TOKEN" : GIT_TOKEN} }
+    );
+
+    return res;
+}
+
+const fetchResponseApi = async (
+    gitlabApi: gitlabAPIEnum, paramArray: Array<Pair<string,string>>
+) => {
     const apiRelative = allGitlabAPI[gitlabApi];
     let fullURL: string = apiUrl(apiRelative);
     
@@ -51,23 +66,67 @@ export const apiFetch = async <T>(C: new() => T, gitlabApi: gitlabAPIEnum, param
         fullURL = fullURL.replace(":" + param.getKey(), param.getValue());
     }
 
-    const GIT_TOKEN = process.env.GIT_TOKEN;
-    if (!GIT_TOKEN)
-        throw "GIT_TOKEN env is empty, needed for API. (You can put in .env file)";
+    const res =  await fetchURLResponseWithToken(fullURL);
+    return res;
+}
 
-    const res =  await fetch(fullURL, { method: "GET", headers: {"PRIVATE-TOKEN" : GIT_TOKEN} });
+
+export const apiFetch = async <T>(
+    C: new() => T, 
+    gitlabApi: gitlabAPIEnum,
+    paramArray: Array<Pair<string,string>>
+    )
+    : Promise<T> => {
+
+    const res = await fetchResponseApi(gitlabApi, paramArray)
     const json = await res.json();
     return Object.assign(Factory.create(C), json);
 }
 
-export const apiFetchArray = async <T>(C: new() => T, gitlabApi: gitlabAPIEnum, paramArray: Array<Pair<string,string>>): Promise<Array<T>> => {
-    const tempArray = await apiFetch(Array,gitlabApi, paramArray);
-    const resultArray: Array<T> = [];
-    tempArray.forEach(elemJSON => {
-        resultArray.push(Object.assign(new C(), elemJSON));
+
+const respToArrayOf = async <T>(C: new() => T, resp: Response) => {
+    let result: Array<T> = [];
+    let json : [] = await resp.json();
+    json.forEach(item => {
+        result.push(Object.assign(new C(), item))
     });
-    return resultArray;
+    return result;
+}
+
+export const apiFetchArray = async <T>(
+    C: new() => T,
+    gitlabApi: gitlabAPIEnum,
+    paramArray: Array<Pair<string,string>>
+    )
+    : Promise<Array<T>> => {
+
+    const resp = await fetchResponseApi(gitlabApi, paramArray);
+    const result = await respToArrayOf(C,resp);
+    return result;
 }
 
 
+
+export const apiFetchArrayAll = async <T>(
+    C: new() => T,
+    gitlabApi: gitlabAPIEnum,
+    paramArray: Array<Pair<string,string>>)
+    : Promise<Array<T>> => {
+
+        // Gitlab pagination:
+         //https://docs.gitlab.com/ee/api/README.html#keyset-based-pagination
+        let result : Array<T> = []
+
+        let response = await fetchResponseApi(gitlabApi, paramArray);
+        let nextUrl = response.headers["Link"];
+        result = result.concat(await respToArrayOf(C,response));
+
+        while (nextUrl) {
+            response = await fetchResponseApi(gitlabApi, paramArray);
+            nextUrl = response.headers["Link"];
+            result = result.concat(await respToArrayOf(C,response));
+        }
+
+        return result;
+}
 
