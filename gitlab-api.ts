@@ -2,6 +2,7 @@ import fetch , { Response } from "node-fetch";
 import process from "process"
 import { Pair } from "./Utils/Pair";
 import { Factory } from "./Utils/Factory";
+import { sleep, TSecond } from "./Utils/Sleep";
 
 const gitlabAPIBase: string = "https://gitlab.com/api/v4";
 
@@ -41,12 +42,20 @@ const apiUrl = (gitlabApi: string ): string => {
     return gitlabAPIBase + gitlabApi;
 };
 
+var isProcessDone :boolean = false;
+export const markProcessDone = () => {isProcessDone = true;};
+
 const fetchURLResponseWithToken = async (fullURL: string) => {
+    //https://docs.gitlab.com/ee/user/gitlab_com/index.html#haproxy-api-throttle
+    await sleep(TSecond / (10 - 1));
+
     const GIT_TOKEN = process.env.GIT_TOKEN;
     if (!GIT_TOKEN)
         throw "GIT_TOKEN env is empty, needed for API. (put in .env file?)";
 
     console.log("[URL] " + fullURL);
+    if (isProcessDone)
+        throw "Process done before all work done. Check async + forEach async."
     const res =  await fetch(
         fullURL,
         { method: "GET", headers: {"PRIVATE-TOKEN" : GIT_TOKEN} }

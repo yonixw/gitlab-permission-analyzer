@@ -4,6 +4,8 @@
 
     ],
     "jsRules": {},
-    "rules": {},
+    "rules": {
+        "no-floating-promises": true
+    },
     "rulesDirectory": []
 }

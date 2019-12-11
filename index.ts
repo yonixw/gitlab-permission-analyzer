@@ -1,11 +1,15 @@
 import {config as dotenvConfig} from "dotenv";
 
-import {apiFetch, gitlabAPIEnum, apiFetchArray, GitlabAccessEnumDesc, apiFetchArrayAll} from "./gitlab-api";
+import { 
+    apiFetch, gitlabAPIEnum, apiFetchArray, GitlabAccessEnumDesc,
+    apiFetchArrayAll, markProcessDone
+} from "./gitlab-api";
 import { User, UserWithAccess } from "./gitlab-classes/User"
 import { Pair } from "./Utils/Pair";
 import { Group } from "./gitlab-classes/Group";
 import { Project } from "./gitlab-classes/Project";
 import { UserAccess } from "./gitlab-classes/UserAccess";
+import { asyncForEach } from "./Utils/AsyncForeach";
 
 let allUsers : {[key:string]: User} = {};
 let allProjects : {[key:string]: Project} = {};
@@ -15,7 +19,7 @@ async function getAllO() {
 }
 
 async function handleProjects(projects: Array<Project>, parent:Group) {
-    projects.forEach(async proj => {
+    await asyncForEach(projects ,async proj => {
         proj.myGroup = parent;
         allProjects[proj.toID()] = proj;
 
@@ -98,7 +102,7 @@ async function main() {
             gitlabAPIEnum.USER_PROJECTS,
             [ Pair.kv("id",myUser.toID()) ]
         );
-        handleProjects(UserProjects,myGroups[0]);
+        await handleProjects(UserProjects,myGroups[0]);
 
         for (let i = 1; i < myGroups.length; i++) {
             const group = myGroups[i];
@@ -107,7 +111,7 @@ async function main() {
                 gitlabAPIEnum.GROUP_PROJECTS,
                 [ Pair.kv("id",group.toID()) ]
             );
-            handleProjects(groupProjects, group);
+            await handleProjects(groupProjects, group);
         }
 
         printUserToProject();
@@ -117,4 +121,10 @@ async function main() {
 }
 
 dotenvConfig(); // load .env file
-main().then(()=>console.log("[DONE]")).catch(e=>console.error(e));
+main()
+    .then(()=> {
+        markProcessDone();
+        console.log("[DONE]")
+    }
+    )
+    .catch(e=>console.error(e));
