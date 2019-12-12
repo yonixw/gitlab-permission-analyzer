@@ -1,7 +1,7 @@
 import fs from "promise-fs"
 import path from "path"
 import { User } from "../gitlab-classes/User";
-import { GitlabAccessEnumDesc, GitlabAccessEnum } from "../gitlab-api";
+import { GitlabAccessEnumDesc, GitlabAccessEnum, GitlabProjectVisibility } from "../gitlab-api";
 import { makeLink, medRisk, highRisk, makeTime } from "./HtmlUtils";
 
 const templatePath = "./html-templates/user-proj.html";
@@ -51,6 +51,16 @@ function riskProjectAccess(inherit: boolean) : string  {
     }
 }
 
+function riskProjectScope(scope: GitlabProjectVisibility) : string  {
+    if (scope == "private") {
+        return "PRIVATE";
+    }
+    else
+    {
+        return highRisk("PUBLIC");
+    }
+}
+
 function timeLabel(time: Date, isProjectLevel : boolean) {
     if(time) {
         return makeTime(time.toString());
@@ -84,6 +94,7 @@ export async function makeUser2ProjReport(
                         access.myProject.web_url, 
                         access.myProject.name_with_namespace
                     )
+                + " - " + riskProjectScope(access.myProject.visibility)
                 + "\n\t\t* " + riskProjectAccess(access.isInheritedGroup)
                 + " - " + riskUSerAccess(access.myAccessMode)
                 + " - " + timeLabel(access.myExpireDate, !access.isInheritedGroup) 
