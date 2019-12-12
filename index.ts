@@ -10,6 +10,7 @@ import { Group } from "./gitlab-classes/Group";
 import { Project } from "./gitlab-classes/Project";
 import { UserAccess } from "./gitlab-classes/UserAccess";
 import { asyncForEach } from "./Utils/AsyncForeach";
+import { bakeTemplate, makeUser2ProjReport } from "./html-templates/HtmlBuilder";
 
 let allUsers : {[key:string]: User} = {};
 let allProjects : {[key:string]: Project} = {};
@@ -58,18 +59,6 @@ async function handleProjects(projects: Array<Project>, parent:Group) {
     });
 }
 
-function printUserToProject() {
-    Object.values(allUsers).forEach(user => {
-        console.log("[USER] " + user.name);
-        user.myProjectAccess.forEach(access => {
-            let result = "\t[PROJ] " + access.myProject.name_with_namespace;
-            result += " | " + GitlabAccessEnumDesc[access.myAccessMode];
-            result += " | " + ((access.isInheritedGroup) ? "GROUP" : "PROJ");
-            result += " | " + access.myExpireDate ;
-            console.log(result);
-        })
-    })
-}
 
 async function main() {
     try {
@@ -103,7 +92,7 @@ async function main() {
         );
         await handleProjects(UserProjects,myGroups[0]);
 
-        for (let i = 1; i < myGroups.length; i++) {
+         for (let i = 1; i < myGroups.length; i++) {
             const group = myGroups[i];
             console.log("Group " + (i+1) + "/" + myGroups.length);
             let groupProjects  = await apiFetchArrayAll(
@@ -112,18 +101,19 @@ async function main() {
                 [ Pair.kv("id",group.toID()) ]
             );
             await handleProjects(groupProjects, group);
-        }
+        } 
 
-        printUserToProject();
+        await makeUser2ProjReport(allUsers);
     } catch (error) {
         console.error(error);
     }
 }
 
 loadEnvFile(); 
-main()
+ main()
     .then(()=> {
         markProcessDone();
         console.log("[DONE]")
     })
-    .catch(e=>console.error(e));
+    .catch(e=>console.error(e)); 
+

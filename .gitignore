@@ -3,3 +3,4 @@ examples/
 *.env
 out/
 scrap.txt
+reports/

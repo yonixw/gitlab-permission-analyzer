@@ -9,13 +9,15 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@types/dotenv": "^8.2.0",
     "dotenv": "^8.2.0",
-    "node-fetch": "^2.6.0"
+    "node-fetch": "^2.6.0",
+    "promise-fs": "^2.1.1"
   },
   "devDependencies": {
+    "@types/dotenv": "^8.2.0",
     "@types/node": "^12.12.16",
     "@types/node-fetch": "^2.5.4",
+    "@types/promise-fs": "^2.1.0",
     "tslint": "^5.20.1",
     "typescript": "^3.7.3"
   }
