@@ -3,7 +3,7 @@
     <title>User to project Report</title>
     <style>
         .mainPre {
-            width: 80ch;
+            /*width: 80ch;*/
             margin: auto;
             background-color: #ffffc2;
             font-size: 1.4em;
@@ -31,27 +31,94 @@
             content: "⏳ ";
         }
 
+        .permissions {
+            margin: 10px auto ;
+            border: solid black 1px;
+        }
+
+        .permissions th{
+            border: solid black 1px;
+            padding: 3px;
+        }
+        .permissions td {
+            border: solid black 1px;
+            color: #00b200;
+            font-weight: bold;
+        }
+
     </style>
 </head>
 <body>
-<pre class="mainPre">
-[USER] The bad and The Ugly
-    [PROJ] Yoni Water Man / robocup2015biu | <span class="maintainer">MAINTAINER</span> | <span class="projectlevel">PROJ</span> | <span class="time">null</span>
-    
-[USER] Elimelech Schreiber
-    [PROJ] Yoni Water Man / robocup2015biu | MAINTAINER | PROJ | null
-    
-[USER] RomanXfory2
-    [PROJ] Yoni Water Man / robocup2015biu | MAINTAINER | PROJ | null
-    
-[USER] Jason Werner
-    [PROJ] qp-ui / qp-ui | DEVELOPER | PROJ | null
-    
-[USER] Andrey Melashenko
-    [PROJ] PRGeopoiskGroup / OUTDATED test_client | DEVELOPER | PROJ | null
-    [PROJ] PRGeopoiskGroup / Server B | DEVELOPER | PROJ | null
-    [PROJ] PRGeopoiskGroup / Server A | DEVELOPER | PROJ | null
-    [PROJ] PRGeopoiskGroup / PSB | DEVELOPER | PROJ | null 
-</pre>
+<div style="height: 95vh; display: flex; flex-flow: column;">
+    <div style="flex-grow: 0;">
+        <table class="permissions">
+            <tr>
+                <th>Name</th>
+                <th>View</th>
+                <th>Create <br/> Issues</th>
+                <th>View Registry</th>
+                <th>Change Code</th>
+                <th>Change proj</th>
+                <th>Protected Branch</th>
+                <th>All</th>
+            </tr>
+            <tr>
+                <th>Guest</th>
+                <td>✔</td>
+                <td>✔</td>
+                <td>❌</td>
+                <td>❌</td>
+                <td>❌</td>
+                <td>❌</td>
+                <td>❌</td>
+            </tr>
+            <tr>
+                <th>Reporter</th>
+                <td>✔</td>
+                <td>✔</td>
+                <td>✔</td>
+                <td>❌</td>
+                <td>❌</td>
+                <td>❌</td>
+                <td>❌</td>
+            </tr>
+            <tr>
+                <th>Developer</th>
+                <td>✔</td>
+                <td>✔</td>
+                <td>✔</td>
+                <td>✔</td>
+                <td>❌</td>
+                <td>❌</td>
+                <td>❌</td>
+            </tr>
+            <tr>
+                <th>Maintainer</th>
+                <td>✔</td>
+                <td>✔</td>
+                <td>✔</td>
+                <td>✔</td>
+                <td>✔</td>
+                <td>✔</td>
+                <td>❌</td>
+            </tr>
+            <tr>
+                <th>Owner</th>
+                <td>✔</td>
+                <td>✔</td>
+                <td>✔</td>
+                <td>✔</td>
+                <td>✔</td>
+                <td>✔</td>
+                <td>✔</td>
+            </tr>
+        </table>    
+    </div>
+    <div style="flex-grow: 1; overflow: scroll; width: 75vw; margin: auto;">
+        <pre class="mainPre">{0}</pre>
+    </div>
+</div>
+<p style="font-size: smaller; margin: auto; width: 40ch;">Created using gitalb-permission-analyzer</span>
 </body>
 </html>
+

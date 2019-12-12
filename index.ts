@@ -1,4 +1,4 @@
-import {config as dotenvConfig} from "dotenv";
+import {config as loadEnvFile} from "dotenv";
 
 import { 
     apiFetch, gitlabAPIEnum, apiFetchArray, GitlabAccessEnumDesc,
@@ -14,12 +14,10 @@ import { asyncForEach } from "./Utils/AsyncForeach";
 let allUsers : {[key:string]: User} = {};
 let allProjects : {[key:string]: Project} = {};
 
-async function getAllO() {
-
-}
-
 async function handleProjects(projects: Array<Project>, parent:Group) {
+    var count = 0;
     await asyncForEach(projects ,async proj => {
+        console.log("Project " + (++count).toString() + "/" + projects.length);
         proj.myGroup = parent;
         allProjects[proj.toID()] = proj;
 
@@ -97,6 +95,7 @@ async function main() {
         });
 
         // My project need user api and not group api
+        console.log("Group " +"1/" + myGroups.length);
         const UserProjects = await apiFetchArrayAll(
             Project,
             gitlabAPIEnum.USER_PROJECTS,
@@ -106,6 +105,7 @@ async function main() {
 
         for (let i = 1; i < myGroups.length; i++) {
             const group = myGroups[i];
+            console.log("Group " + (i+1) + "/" + myGroups.length);
             let groupProjects  = await apiFetchArrayAll(
                 Project,
                 gitlabAPIEnum.GROUP_PROJECTS,
@@ -120,11 +120,10 @@ async function main() {
     }
 }
 
-dotenvConfig(); // load .env file
+loadEnvFile(); 
 main()
     .then(()=> {
         markProcessDone();
         console.log("[DONE]")
-    }
-    )
+    })
     .catch(e=>console.error(e));
