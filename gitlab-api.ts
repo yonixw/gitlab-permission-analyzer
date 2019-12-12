@@ -36,7 +36,7 @@ export const GitlabAccessEnumDesc: { [key in GitlabAccessEnum]: string; } = {
     [GitlabAccessEnum.OWNER] : "OWNER",
 }
 
-export type GitlabProjectVisibility = "private" | "public";
+export type GitlabProjectVisibility = "private" | "public" | "internal";
 
 const apiUrl = (gitlabApi: string ): string => {
     return gitlabAPIBase + gitlabApi;
