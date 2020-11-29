@@ -6,6 +6,7 @@ export class Group {
     name: string;
     path: string;
     web_url: string;
+    parent_id : number | null;
 
     myProjects: Array<Project> = [];
 
