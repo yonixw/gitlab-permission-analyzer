@@ -32,7 +32,7 @@ export class Project {
     "namespace": {
         "id": 3,
     */
-    namespace : {[key in ["id"]:]}
+    namespace : {"id":number}
 
     toID() : string {
         return this.id.toString();
