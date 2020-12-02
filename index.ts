@@ -18,7 +18,7 @@ let allProjects : {[key:string]: Project} = {};
 async function handleProjects(projects: Array<Project>, parent:Group) {
     var count = 0;
     await asyncForEach(projects ,async proj => {
-        console.log("Project " + (++count).toString() + "/" + projects.length);
+        console.log("\t[P] Project " + (++count).toString() + "/" + projects.length);
         proj.myGroup = parent;
         allProjects[proj.toID()] = proj;
 
@@ -80,11 +80,11 @@ async function main() {
         )
 
         myGroups.forEach(g => {
-            console.log(`Found group: ${g.name} [${g.toID()}]`);
+            console.log(`Found group: '${g.name}' [${g.toID()}]`);
         });
 
         // My project need user api and not group api
-        console.log("Group " +"1/" + myGroups.length);
+        console.log("[G] Group " +"1/" + myGroups.length);
         const UserProjects = await apiFetchArrayAll(
             Project,
             gitlabAPIEnum.USER_PROJECTS,
@@ -94,7 +94,7 @@ async function main() {
 
          for (let i = 1; i < myGroups.length; i++) {
             const group = myGroups[i];
-            console.log("Group " + (i+1) + "/" + myGroups.length);
+            console.log("[G] Group " + (i+1) + "/" + myGroups.length);
             let groupProjects  = await apiFetchArrayAll(
                 Project,
                 gitlabAPIEnum.GROUP_PROJECTS,

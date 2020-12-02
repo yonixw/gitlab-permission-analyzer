@@ -4,13 +4,14 @@ import { Pair } from "./Utils/Pair";
 import { Factory } from "./Utils/Factory";
 import { sleep, TSecond } from "./Utils/Sleep";
 
-const gitlabAPIBase: string = "https://gitlab.com/api/v4";
+const gitlabAPIBase: string = process.env.GIT_URL || "https://gitlab.com/api/v4";
 
 export enum gitlabAPIEnum { 
     MY_USER, MY_NAMESPACES,
     USER_PROJECTS,
     GROUP_PROJECTS, GROUP_MEMBERS,
     PROJECT_MEMBERS, PROJECT_ALL_MEMBERS,
+    PROJECT_USERS,
 };
 
 const allGitlabAPI: { [key in gitlabAPIEnum]: string; } = {
@@ -21,6 +22,7 @@ const allGitlabAPI: { [key in gitlabAPIEnum]: string; } = {
     [gitlabAPIEnum.GROUP_MEMBERS] : "/groups/:id/members",
     [gitlabAPIEnum.PROJECT_MEMBERS] : "/projects/:id/members",
     [gitlabAPIEnum.PROJECT_ALL_MEMBERS] : "/projects/:id/members/all",
+    [gitlabAPIEnum.PROJECT_USERS]: "/projects/:id/users"
 };
 
 export enum GitlabAccessEnum {
