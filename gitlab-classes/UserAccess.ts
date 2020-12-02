@@ -10,6 +10,6 @@ export class UserAccess {
     myAccessMode: GitlabAccessEnum;
     myExpireDate: Date;
     
-    isInheritedGroup : boolean; 
+    isInheritedGroupOrShare : boolean; 
     myInheritGroup: Group;
 }

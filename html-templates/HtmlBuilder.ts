@@ -95,9 +95,9 @@ export async function makeUser2ProjReport(
                         access.myProject.name_with_namespace
                     )
                 + " - " + riskProjectScope(access.myProject.visibility)
-                + "\n\t\t* " + riskProjectAccess(access.isInheritedGroup)
+                + "\n\t\t* " + riskProjectAccess(access.isInheritedGroupOrShare)
                 + " - " + riskUSerAccess(access.myAccessMode)
-                + " - " + timeLabel(access.myExpireDate, !access.isInheritedGroup) 
+                + " - " + timeLabel(access.myExpireDate, !access.isInheritedGroupOrShare) 
                 + "\r\n";
         })
     })

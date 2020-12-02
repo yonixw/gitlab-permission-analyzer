@@ -4,8 +4,6 @@ import { Pair } from "./Utils/Pair";
 import { Factory } from "./Utils/Factory";
 import { sleep, TSecond } from "./Utils/Sleep";
 
-const gitlabAPIBase: string = process.env.GIT_URL || "https://gitlab.com/api/v4";
-
 export enum gitlabAPIEnum { 
     MY_USER, MY_NAMESPACES,
     USER_PROJECTS,
@@ -27,7 +25,7 @@ const allGitlabAPI: { [key in gitlabAPIEnum]: string; } = {
 
 export enum GitlabAccessEnum {
     GUEST=10,REPORTER=20,DEVELOPER=30,MAINTAINER=40,
-    OWNER=50, 
+    OWNER=50, USER=999
 }
 
 export const GitlabAccessEnumDesc: { [key in GitlabAccessEnum]: string; } = {
@@ -36,12 +34,13 @@ export const GitlabAccessEnumDesc: { [key in GitlabAccessEnum]: string; } = {
     [GitlabAccessEnum.DEVELOPER] : "DEVELOPER",
     [GitlabAccessEnum.MAINTAINER] : "MAINTAINER",
     [GitlabAccessEnum.OWNER] : "OWNER",
+    [GitlabAccessEnum.USER]: "Any Level (USER)"
 }
 
 export type GitlabProjectVisibility = "private" | "public" | "internal";
 
 const apiUrl = (gitlabApi: string ): string => {
-    return gitlabAPIBase + gitlabApi;
+    return (process.env.GIT_URL || "https://gitlab.com/api/v4") + gitlabApi;
 };
 
 var isProcessDone :boolean = false;
@@ -98,6 +97,7 @@ export const apiFetch = async <T>(
 const respToArrayOf = async <T>(C: new() => T, resp: Response) => {
     let result: Array<T> = [];
     let json : [] = await resp.json();
+    
     json.forEach(item => {
         result.push(Object.assign(new C(), item))
     });
