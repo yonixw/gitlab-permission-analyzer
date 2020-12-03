@@ -3,6 +3,7 @@ import path from "path"
 import { User } from "../gitlab-classes/User";
 import { GitlabAccessEnumDesc, GitlabAccessEnum, GitlabProjectVisibility } from "../gitlab-api";
 import { makeLink, medRisk, highRisk, makeTime } from "./HtmlUtils";
+import { UserAccess } from "../gitlab-classes/UserAccess";
 
 const templatePath = "./html-templates/user-proj.html";
 const outPath = "./reports/"
@@ -41,9 +42,9 @@ function riskUSerAccess(access: GitlabAccessEnum) : string  {
     }
 }
 
-function riskProjectAccess(inherit: boolean) : string  {
-    if (inherit) {
-        return "Group";
+function riskProjectAccess(access:UserAccess) : string  {
+    if (!access.isProjMember) {
+        return "Inhrit [Under " + access.discoveryGroups.length + " groups]";
     }
     else
     {
@@ -95,9 +96,9 @@ export async function makeUser2ProjReport(
                         access.myProject.name_with_namespace
                     )
                 + " - " + riskProjectScope(access.myProject.visibility)
-                + "\n\t\t* " + riskProjectAccess(access.isInheritedGroupOrShare)
+                + "\n\t\t* " + riskProjectAccess(access)
                 + " - " + riskUSerAccess(access.myAccessMode)
-                + " - " + timeLabel(access.myExpireDate, !access.isInheritedGroupOrShare) 
+                + " - " + timeLabel(access.myExpireDate, !access.isProjMember) 
                 + "\r\n";
         })
     })

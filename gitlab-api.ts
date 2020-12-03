@@ -25,8 +25,13 @@ const allGitlabAPI: { [key in gitlabAPIEnum]: string; } = {
 };
 
 export enum GitlabAccessEnum {
+    USER=-1,
     GUEST=10,REPORTER=20,DEVELOPER=30,MAINTAINER=40,
-    OWNER=50, USER=999
+    OWNER=50, 
+}
+
+export function maxAccess(a:GitlabAccessEnum, b:GitlabAccessEnum) {
+    return (a>b)?a:b;
 }
 
 export const GitlabAccessEnumDesc: { [key in GitlabAccessEnum]: string; } = {

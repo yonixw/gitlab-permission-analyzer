@@ -11,6 +11,7 @@ import { Project } from "./gitlab-classes/Project";
 import { UserAccess } from "./gitlab-classes/UserAccess";
 import { asyncForEach } from "./Utils/AsyncForeach";
 import { bakeTemplate, makeUser2ProjReport } from "./html-templates/HtmlBuilder";
+import { group } from "console";
 
 let allUsers: { [key: string]: User } = {};
 let allProjects: { [key: string]: Project } = {};
@@ -18,7 +19,9 @@ let allProjects: { [key: string]: Project } = {};
 async function handleProjects(projects: Array<Project>, parent: Group) {
     var count = 0;
     await asyncForEach(projects, async proj => {
-        console.log("\t[P] Project " + (++count).toString() + "/" + projects.length);
+        console.log("\t[P] Project "
+             + (++count).toString() + "/" + projects.length
+            + "- '" + proj.name +"'");
         proj.myGroup = parent;
         allProjects[proj.toID()] = proj;
 
@@ -28,39 +31,64 @@ async function handleProjects(projects: Array<Project>, parent: Group) {
             [Pair.kv("id", proj.toID())]
         );
 
-        let allUsers: Array<UserWithAccess> = await apiFetchArrayAll(
+        let allProjMembers: Array<UserWithAccess> = await apiFetchArrayAll(
+            UserWithAccess,
+            gitlabAPIEnum.PROJECT_ALL_MEMBERS,
+            [Pair.kv("id", proj.toID())]
+        );
+
+        let projUsers: Array<UserWithAccess> = await apiFetchArrayAll(
             UserWithAccess,
             gitlabAPIEnum.PROJECT_USERS,
             [Pair.kv("id", proj.toID())]
         );
 
-        allUsers.forEach(user => {
-            let access = new UserAccess();
-            access.myProject = proj;
-            access.myUser = user;
-            access.myAccessMode = GitlabAccessEnum.USER;
-            access.myExpireDate = null;
-            access.isInheritedGroupOrShare = true;
-            access.myInheritGroup = parent;
-
+        const findOrCreateAccess = (user:UserWithAccess, p: Project) => {
             if (!allUsers[user.toID()])
                 allUsers[user.toID()] = user as User;
-            allUsers[user.toID()].myProjectAccess.push(access);
+            
+            let access=
+                allUsers[user.toID()].myProjectAccess
+                .find(ua=>ua.myProject.web_url==p.web_url);
+
+            if (!access) {
+                access = new UserAccess();
+                access.myProject = proj;
+                access.myUser = user;
+                allUsers[user.toID()].myProjectAccess.push(access);
+            }
+            return access;
+        }
+
+
+        projUsers.forEach(user => {
+            let access = findOrCreateAccess(user,proj);
+
+            if (access.discoveryGroups.indexOf(parent)==-1) {
+                access.discoveryGroups.push(parent);
+            }
+
+            access.isProjMember = false;
+            access.myAccessMode = GitlabAccessEnum.USER;
+            access.myExpireDate = null;
+
+        });
+
+        allProjMembers.forEach(user => {
+            let access = findOrCreateAccess(user,proj);
+
+            access.myAccessMode = user.access_level;
+            access.myExpireDate = user.expires_at;
         });
 
         projMembers.forEach(user => {
-            let access = allUsers[user.toID()].myProjectAccess;
+            let access = findOrCreateAccess(user,proj);
 
             access.myAccessMode = user.access_level;
             access.myExpireDate = user.expires_at;
 
-            // Start assuming they were inherited
-            access.isInheritedGroup = false;
-            access.myInheritGroup = null;
-
-            if (!allUsers[user.toID()])
-                allUsers[user.toID()] = user as User;
-            allUsers[user.toID()].myProjectAccess.push(access);
+            // Only here we know the permission is bound to this project
+            access.isProjMember = true;
         });
     });
 }
@@ -68,8 +96,6 @@ async function handleProjects(projects: Array<Project>, parent: Group) {
 
 async function main() {
     try {
-        console.log("⚠ Currently not supporting group2group inheritance ⚠");
-
         const myUser = await apiFetch(User, gitlabAPIEnum.MY_USER, []);
         allUsers[myUser.toID()] = myUser;
 
@@ -120,7 +146,8 @@ async function main() {
                 for (let i = 0; i < subGroupProjects.length; i++) {
                     const subgroup = subGroupProjects[i];
                     console.log("\t[SG] Sub-Group " + (i + 1) 
-                                + "/" + (subGroupProjects.length+1));
+                                + "/" + (subGroupProjects.length+1) 
+                                + "- '" + subgroup.name +"'");
                     await handleGroup(subgroup,false);
                 }
             }
@@ -128,10 +155,12 @@ async function main() {
 
         for (let i = 0; i < myNamespaces.length; i++) {
             const group = myNamespaces[i];
-            console.log("[G] Group " + (i + 1) + "/" + (myNamespaces.length+1));
+            console.log("[G] Group " + (i + 1) + "/" + (myNamespaces.length+1)
+                + "- '" + group.name +"'");
             await handleGroup(group, true)
         }
 
+        //console.log(JSON.stringify(allUsers,null,4))
         await makeUser2ProjReport(allUsers);
 
     } catch (error) {
