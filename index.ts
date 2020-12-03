@@ -79,39 +79,61 @@ async function main() {
             "Id: " + myUser.toID()
         );
 
-        let myGroups: Array<Group> = await apiFetchArrayAll(
+        let myNamespaces: Array<Group> = await apiFetchArrayAll(
             Group,
-            gitlabAPIEnum.MY_NAMESPACES,
+            gitlabAPIEnum.MY_TOP_LEVEL_NAMESPACES,
             [Pair.kv("id", myUser.toID())]
         );
-        let myOwnGroup = myGroups.filter(g=>g.web_url.indexOf("/groups/")==-1)
-        myGroups = myGroups.filter(g=>g.web_url.indexOf("/groups/")>-1)
+        let myOwnNamespace = myNamespaces
+            .filter(g=>g.web_url.indexOf("/groups/")==-1)
+        myNamespaces = myNamespaces
+            .filter(g=>g.web_url.indexOf("/groups/")>-1)
 
-        myGroups.forEach(g => {
-            console.log(`Found group: '${g.name}' [${g.toID()}]`);
+        myNamespaces.forEach(g => {
+            console.log(`Found Namespace/TopLevel Group: '${g.name}' [${g.toID()}]`);
         });
 
         // My project need user api and not group api
-        console.log("[G] Group " + "0/" + (myGroups.length));
+        console.log("[N] My namespace: " + myUser.name);
         const UserProjects = await apiFetchArrayAll(
             Project,
             gitlabAPIEnum.USER_PROJECTS,
             [Pair.kv("id", myUser.toID())]
         );
-        await handleProjects(UserProjects, myOwnGroup[0]);
+        await handleProjects(UserProjects, myOwnNamespace[0]);
 
-        for (let i = 0; i < myGroups.length; i++) {
-            const group = myGroups[i];
-            console.log("[G] Group " + (i + 1) + "/" + (myGroups.length+1));
+        const handleGroup = async (group:Group, includeKids = false) => {
             let groupProjects = await apiFetchArrayAll(
                 Project,
                 gitlabAPIEnum.GROUP_PROJECTS,
                 [Pair.kv("id", group.toID())]
             );
             await handleProjects(groupProjects, group);
+
+            if (includeKids) {
+                let subGroupProjects = await apiFetchArrayAll(
+                    Group,
+                    gitlabAPIEnum.GROUP_DESCENDANT,
+                    [Pair.kv("id", group.toID())]
+                );
+
+                for (let i = 0; i < subGroupProjects.length; i++) {
+                    const subgroup = subGroupProjects[i];
+                    console.log("\t[SG] Sub-Group " + (i + 1) 
+                                + "/" + (subGroupProjects.length+1));
+                    await handleGroup(subgroup,false);
+                }
+            }
+        }
+
+        for (let i = 0; i < myNamespaces.length; i++) {
+            const group = myNamespaces[i];
+            console.log("[G] Group " + (i + 1) + "/" + (myNamespaces.length+1));
+            await handleGroup(group, true)
         }
 
         await makeUser2ProjReport(allUsers);
+
     } catch (error) {
         console.error(error);
     }

@@ -5,19 +5,20 @@ import { Factory } from "./Utils/Factory";
 import { sleep, TSecond } from "./Utils/Sleep";
 
 export enum gitlabAPIEnum { 
-    MY_USER, MY_NAMESPACES,
+    MY_USER, MY_TOP_LEVEL_NAMESPACES,
     USER_PROJECTS,
-    GROUP_PROJECTS, GROUP_MEMBERS,
+    GROUP_PROJECTS, GROUP_MEMBERS, GROUP_DESCENDANT,
     PROJECT_MEMBERS, PROJECT_ALL_MEMBERS,
     PROJECT_USERS,
 };
 
 const allGitlabAPI: { [key in gitlabAPIEnum]: string; } = {
     [gitlabAPIEnum.MY_USER] : "/user",
-    [gitlabAPIEnum.MY_NAMESPACES] : "/namespaces",
+    [gitlabAPIEnum.MY_TOP_LEVEL_NAMESPACES] : "/namespaces",
     [gitlabAPIEnum.USER_PROJECTS] : "/users/:id/projects",
     [gitlabAPIEnum.GROUP_PROJECTS] : "/groups/:id/projects",
     [gitlabAPIEnum.GROUP_MEMBERS] : "/groups/:id/members",
+    [gitlabAPIEnum.GROUP_DESCENDANT]: "/groups/:id/descendant_groups?min_access_level=10",
     [gitlabAPIEnum.PROJECT_MEMBERS] : "/projects/:id/members",
     [gitlabAPIEnum.PROJECT_ALL_MEMBERS] : "/projects/:id/members/all",
     [gitlabAPIEnum.PROJECT_USERS]: "/projects/:id/users"
