@@ -2,6 +2,8 @@
 
 A tool to produce a simple report about users and what repos they can access. Should be run with the most upper administrator access token
 
+Also, a simple presentation about GitLab permission concepts and Gitlab APIs used: [gitlab-permission-analyzer.pdf](./doc.files/gitlab-permission-analyzer.pdf)
+
 ## How to run
 
 1. Put the token in the `.env` file (see sample file `.env.sample`)
