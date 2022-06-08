@@ -23,6 +23,8 @@ Also, a simple presentation about GitLab permission concepts and Gitlab APIs use
 
 ## Example result (JSON)
 
+This Can used to backup-clone all repos with the following snippet: [get.backup.shell.js](get.backup.shell.js)
+
 ```json
 [
     {
