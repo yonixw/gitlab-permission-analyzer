@@ -21,7 +21,33 @@ Also, a simple presentation about GitLab permission concepts and Gitlab APIs use
 
 ![step2](./doc.files/2.npm.start.png)
 
-## Example result 
+## Example result (JSON)
+
+```json
+[
+    {
+        "user": "yonixw",
+        "nick": "****************",
+        "projects": []
+    },
+    {
+        "user": "*****",
+        "nick": "****************",
+        "projects": [
+            {
+                "fullurl": "https://gitlab.com/***/****/ui",
+                "name": "**** / ***** / Ui",
+                "expire": null,
+                "visibility": "private",
+                "directmember": false,
+                "accessgroupcount": 2
+            }
+        ]
+    }
+]
+```
+
+## Example result (HTML)
 
 ![step3](./doc.files/3.open.report.png)
 
