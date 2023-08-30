@@ -21,7 +21,7 @@ Also, a simple presentation about GitLab permission concepts and Gitlab APIs use
 
 ![step2](./doc.files/2.npm.start.png)
 
-## Example result (JSON)
+## Censored Example result (JSON)
 
 This Can used to backup-clone all repos with the following snippet: [get.backup.shell.js](get.backup.shell.js)
 
